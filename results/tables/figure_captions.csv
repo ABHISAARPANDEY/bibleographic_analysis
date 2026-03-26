@@ -1,0 +1,13 @@
+file,caption
+annual_scientific_production.png,Annual scientific production trend of the filtered bibliometric corpus.
+top20_authors_bar.png,Top 20 authors by number of documents.
+top20_journals_bar.png,Top 20 journals/sources by document count.
+top20_keywords_bar.png,Top 20 keywords in the filtered corpus.
+top20_countries_bar.png,Top countries by author affiliation mentions.
+network_coauthorship.png,Co-authorship collaboration network.
+network_keyword_cooccurrence.png,Keyword co-occurrence network.
+network_country_collaboration.png,Country collaboration network.
+thematic_map.png,Thematic map of the knowledge structure.
+conceptual_structure.png,Conceptual structure using MCA.
+thematic_evolution.png,Thematic evolution across selected time periods.
+three_fields_plot.png,"Three-fields linkage among authors, keywords, and sources."

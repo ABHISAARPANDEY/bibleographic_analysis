@@ -1,0 +1,82 @@
+Hindex                  h-index calculation
+KeywordGrowth           Yearly occurrences of top keywords/terms
+applyCitationMatching   Apply citation normalization to bibliometrix
+                        data frame
+assignEvolutionColors   Assign Colors to Thematic Evolution Nodes Based
+                        on Lineages
+authorBio               Retrieve Author Biographical Information from
+                        OpenAlex
+authorProdOverTime      Top-Authors' Productivity over Time
+biblioAnalysis          Bibliometric Analysis
+biblioNetwork           Creating Bibliographic networks
+bibliometrix-package    Comprehensive Science Mapping Analysis
+biblioshiny             Shiny UI for bibliometrix package
+bibtag                  Tag list and bibtex fields.
+bradford                Bradford's law
+citations               Citation frequency distribution
+cocMatrix               Bibliographic bipartite network matrices
+collabByRegionPlot      Country Collaboration Networks by Region
+conceptualStructure     Creating and plotting conceptual structure map
+                        of a scientific field
+convert2df              Import and Convert bibliographic export files
+                        and API objects.
+countries               Index of Countries.
+couplingMap             Coupling Analysis
+customTheme             Custom Theme variables for Biblioshiny.
+dominance               Authors' dominance ranking
+duplicatedMatching      Searching of duplicated records in a
+                        bibliographic database
+fieldByYear             Field Tag distribution by Year
+findAuthorWorks         Find Author's Co-authored Works
+get_authors_summary     Get Authors Summary from OpenAlex
+histNetwork             Historical co-citation network
+histPlot                Plotting historical co-citation network
+idByAuthor              Get Complete Author Information and ID from
+                        Scopus
+keywordAssoc            ID and DE keyword associations
+lifeCycle               Life Cycle Analysis with Logistic Growth Model
+localCitations          Author local citations
+logo                    Bibliometrix logo.
+lotka                   Lotka's law coefficient estimation
+ltwa                    Index of ltwa.
+mergeDbSources          Merge bibliographic data frames from supported
+                        bibliogtraphic DBs
+mergeKeywords           Merge DE and ID Fields into a Unified Keywords
+                        Column
+metaTagExtraction       Meta-Field Tag Extraction
+missingData             Completeness of bibliographic metadata
+net2Pajek               Save a network graph object as Pajek files
+net2VOSviewer           Open a bibliometrix network in VosViewer
+networkPlot             Plotting Bibliographic networks
+networkStat             Calculating network summary statistics
+normalizeCitationScore
+                        Calculate the normalized citation score metric
+normalizeSimilarity     Calculate similarity indices
+normalize_citations     Normalize and match bibliographic citations
+plot.bibliodendrogram   Plotting dendrogram resulting from Conceptual
+                        Structure Analysis
+plot.bibliometrix       Plotting bibliometric analysis results
+plotThematicEvolution   Plot a Thematic Evolution Analysis
+print_author_works_summary
+                        Print Summary of Author Works Search
+readFiles               DEPRECATED: Load a sequence of ISI or SCOPUS
+                        Export files into a large character object
+retrievalByAuthorID     Get Author Content on SCOPUS by ID
+rpys                    Reference Publication Year Spectroscopy
+sourceGrowth            Number of documents published annually per Top
+                        Sources
+splitCommunities        Splitting Network communities
+stopwords               List of English stopwords.
+summary.bibliometrix    Summarizing bibliometric analysis results
+summary.bibliometrix_netstat
+                        Summarizing network analysis results
+tableTag                Tabulate elements from a Tag Field column
+termExtraction          Term extraction tool from textual fields of a
+                        manuscript
+thematicEvolution       Perform a Thematic Evolution Analysis
+thematicMap             Create a thematic map
+threeFieldsPlot         Three Fields Plot
+timeslice               Bibliographic data frame time slice
+trim                    Deleting leading and ending white spaces
+trim.leading            Deleting leading white spaces
+trimES                  Deleting extra white spaces

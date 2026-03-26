@@ -1,0 +1,13 @@
+biblio                  Dataset of "Bibliometrics" scientific
+                        documents.
+biblio_df               Dataset of "Bibliometrics" manuscripts.
+garfield                Eugene Garfield's manuscripts.
+isiCollection           Bibliometrics manuscripts from Clarivate
+                        Analytics WoS.
+management              The use of bibliometric approaches in business
+                        and management disciplines.
+scientometrics          "Co-citation analysis" and "Coupling analysis"
+                        manuscripts.
+scientometrics_text     "Co-citation analysis" and "Coupling analysis"
+                        manuscripts.
+scopusCollection        "Bibliometrics" manuscripts from SCOPUS.

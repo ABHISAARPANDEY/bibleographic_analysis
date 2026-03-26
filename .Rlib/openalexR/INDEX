@@ -1,0 +1,41 @@
+authors2df              Convert OpenAlex collection of authors' records
+                        from list format to data frame
+concept_abbrev          Concepts and abbreviations.
+concepts2df             Convert OpenAlex collection of concepts'
+                        records from list format to data frame
+countrycode             Index of Countries and their alpha-2 and
+                        aplha-3 codes.
+funders2df              Convert OpenAlex collection of funders' records
+                        from list format to data frame
+get_coverage            Get coverage of OpenAlex fields in openalexR
+institutions2df         Convert OpenAlex collection of institutions'
+                        records from list format to data frame
+keywords2df             Convert keywords from list to data frame
+oa2bibliometrix         Convert OpenAlex collection from data frame to
+                        bibliometrix object
+oa2df                   Convert OpenAlex collection from list to data
+                        frame
+oa2df_coverage          Coverage of OpenAlex entity fields after
+                        converting to data frame.
+oa_entities             Available entities in the OpenAlex database
+oa_fetch                Fetching records
+oa_generate             Iterating through records
+oa_ngrams               Get N-grams of works
+oa_query                Generate an OpenAlex query from a set of
+                        parameters
+oa_random               oa_fetch but for a random query
+oa_request              Get bibliographic records from OpenAlex
+                        database
+oa_snowball             A function to perform a snowball search and
+                        convert the result to a tibble/data frame.
+publishers2df           Convert OpenAlex collection of publishers'
+                        records from list format to data frame
+show_authors            Simplify the OpenAlex authors result
+show_works              Simplify the OpenAlex works result
+snowball2df             Flatten snowball result
+sources2df              Convert OpenAlex collection of sources' records
+                        from list format to data frame
+topics2df               Convert OpenAlex collection of topics' records
+                        from list format to data frame
+works2df                Convert OpenAlex collection of works from list
+                        format to data frame

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="John Muschelli" />
+
+<meta name="date" content="2025-07-30" />
+
+<title>Setting up the Scopus API Key</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Setting up the Scopus API Key</h1>
+<h4 class="author">John Muschelli</h4>
+<h4 class="date">2025-07-30</h4>
+
+
+
+<div id="rscopus" class="section level1">
+<h1>rscopus</h1>
+<p>The goal of rscopus is to provide an R Scopus Database API
+Interface.</p>
+<div id="steps-to-get-api-key" class="section level2">
+<h2>Steps to get API key</h2>
+<p>In order to use this package, you need an API key from <a href="https://dev.elsevier.com/sc_apis.html" class="uri">https://dev.elsevier.com/sc_apis.html</a>. You should login
+from your institution and go to Create API Key. You need to provide a
+website URL and a label, but the website can be your personal website,
+and agree to the terms of service.</p>
+<ol style="list-style-type: decimal">
+<li>Go to <a href="https://dev.elsevier.com/user/signin" class="uri">https://dev.elsevier.com/user/signin</a>. Login or create a
+free account.</li>
+<li>Click “Create API Key”. Put in a label, such as
+<code>rscopus key</code>. Add a website. <a href="http://example.com" class="uri">http://example.com</a> is fine if you do not have a
+site.</li>
+<li><strong>Read</strong> and agree to the TOS if you do indeed
+agree.</li>
+<li>Add <code>Elsevier_API = &quot;API KEY GOES HERE&quot;</code> to
+<code>~/.Renviron</code> file, or add
+<code>export Elsevier_API=API KEY GOES HERE</code> to your
+<code>~/.bash_profile</code>.</li>
+</ol>
+<p>Alternatively, you you can either set the API key using
+<code>rscopus::set_api_key</code> or by
+<code>options(&quot;elsevier_api_key&quot; = api_key)</code>. You can access the
+API key using <code>rscopus::get_api_key</code>.</p>
+<p>You should be able to test out the API key using the <a href="https://dev.elsevier.com/scopus.html">interactive Scopus
+APIs</a>.</p>
+<div id="a-note-about-api-keys-and-ip-addresses" class="section level3">
+<h3>A note about API keys and IP addresses</h3>
+<p>The API Key is bound to a set of IP addresses, usually bound to your
+institution. Therefore, if you are using this for a Shiny application,
+you must host the Shiny application from your institution servers in
+some way. Also, you cannot access the Scopus API with this key if you
+are offsite and must VPN into the server or use a computing cluster with
+an institution IP.</p>
+<p>See <a href="https://dev.elsevier.com/tecdoc_api_authentication.html" class="uri">https://dev.elsevier.com/tecdoc_api_authentication.html</a></p>
+</div>
+</div>
+<div id="example" class="section level2">
+<h2>Example</h2>
+<p>This is a basic example which shows you how to solve a common
+problem:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(rscopus)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>authorized <span class="ot">=</span> <span class="fu">is_elsevier_authorized</span>()</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">have_api_key</span>()) {</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  x <span class="ot">=</span> <span class="fu">abstract_retrieval</span>(<span class="st">&quot;S1053811915002700&quot;</span>, <span class="at">identifier =</span> <span class="st">&quot;pii&quot;</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>                         <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  res <span class="ot">=</span> <span class="fu">bibtex_core_data</span>(x)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="fu">cat</span>(res)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="cf">if</span> (authorized) {</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>    </span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>    res <span class="ot">=</span> <span class="fu">author_df</span>(<span class="at">last_name =</span> <span class="st">&quot;Muschelli&quot;</span>, <span class="at">first_name =</span> <span class="st">&quot;John&quot;</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>, <span class="at">general =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>    <span class="fu">names</span>(res)</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>    <span class="fu">head</span>(res[, <span class="fu">c</span>(<span class="st">&quot;title&quot;</span>, <span class="st">&quot;journal&quot;</span>, <span class="st">&quot;description&quot;</span>)])</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>    <span class="fu">unique</span>(res<span class="sc">$</span>au_id)</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>    <span class="fu">unique</span>(<span class="fu">as.character</span>(res<span class="sc">$</span>affilname_1))</span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>    </span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>    all_dat <span class="ot">=</span> <span class="fu">author_data</span>(<span class="at">last_name =</span> <span class="st">&quot;Muschelli&quot;</span>, </span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>                          <span class="at">first_name =</span> <span class="st">&quot;John&quot;</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>, <span class="at">general =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>    res2 <span class="ot">=</span> all_dat<span class="sc">$</span>df</span>
+<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>    res2 <span class="ot">=</span> res2 <span class="sc">%&gt;%</span> </span>
+<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a>      <span class="fu">rename</span>(<span class="at">journal =</span> <span class="st">`</span><span class="at">prism:publicationName</span><span class="st">`</span>,</span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a>             <span class="at">title =</span> <span class="st">`</span><span class="at">dc:title</span><span class="st">`</span>,</span>
+<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a>             <span class="at">description =</span> <span class="st">`</span><span class="at">dc:description</span><span class="st">`</span>)</span>
+<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a>    <span class="fu">head</span>(res[, <span class="fu">c</span>(<span class="st">&quot;title&quot;</span>, <span class="st">&quot;journal&quot;</span>, <span class="st">&quot;description&quot;</span>)])</span>
+<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a>  }</span>
+<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a>}</span>
+<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a><span class="co">#&gt; @article{Muschelli2015Validatedimages,</span></span>
+<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a><span class="co">#&gt; author = {John Muschelli and Natalie L. Ullman and W. Andrew Mould and Paul Vespa and Daniel F. Hanley and Ciprian M. Crainiceanu},</span></span>
+<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a><span class="co">#&gt; address = {David Geffen School of Medicine at UCLA; Johns Hopkins Bloomberg School of Public Health; Johns Hopkins Medical Institutions},</span></span>
+<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a><span class="co">#&gt; title = {Validated automatic brain extraction of head CT images},</span></span>
+<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a><span class="co">#&gt; journal = {NeuroImage},</span></span>
+<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a><span class="co">#&gt; year = {2015},</span></span>
+<span id="cb1-33"><a href="#cb1-33" tabindex="-1"></a><span class="co">#&gt; volume = {114},</span></span>
+<span id="cb1-34"><a href="#cb1-34" tabindex="-1"></a><span class="co">#&gt; number = {},</span></span>
+<span id="cb1-35"><a href="#cb1-35" tabindex="-1"></a><span class="co">#&gt; pages = {379-385},</span></span>
+<span id="cb1-36"><a href="#cb1-36" tabindex="-1"></a><span class="co">#&gt; doi = {10.1016/j.neuroimage.2015.03.074},</span></span>
+<span id="cb1-37"><a href="#cb1-37" tabindex="-1"></a><span class="co">#&gt; abstract = {Background: X-ray computed tomography (CT) imaging of the brain is commonly used in diagnostic settings. Although CT scans are primarily used in clinical practice, they are increasingly used in research. A fundamental processing step in brain imaging research is brain extraction - the process of separating the brain tissue from all other tissues. Methods for brain extraction have either been 1) validated but not fully automated, or 2) fully automated and informally proposed, but never formally validated. Aim: To systematically analyze and validate the performance of FSL&#39;s brain extraction tool (BET) on head CT images of patients with intracranial hemorrhage. This was done by comparing the manual gold standard with the results of several versions of automatic brain extraction and by estimating the reliability of automated segmentation of longitudinal scans. The effects of the choice of BET parameters and data smoothing is studied and reported. Methods: All images were thresholded using a 0-100Hounsfield unit (HU) range. In one variant of the pipeline, data were smoothed using a 3-dimensional Gaussian kernel (σ=1mm3) and re-thresholded to 0-100HU; in the other, data were not smoothed. BET was applied using 1 of 3 fractional intensity (FI) thresholds: 0.01, 0.1, or 0.35 and any holes in the brain mask were filled.For validation against a manual segmentation, 36 images from patients with intracranial hemorrhage were selected from 19 different centers from the MISTIE (Minimally Invasive Surgery plus recombinant-tissue plasminogen activator for Intracerebral Evacuation) stroke trial. Intracranial masks of the brain were manually created by one expert CT reader. The resulting brain tissue masks were quantitatively compared to the manual segmentations using sensitivity, specificity, accuracy, and the Dice Similarity Index (DSI). Brain extraction performance across smoothing and FI thresholds was compared using the Wilcoxon signed-rank test. The intracranial volume (ICV) of each scan was estimated by multiplying the number of voxels in the brain mask by the dimensions of each voxel for that scan. From this, we calculated the ICV ratio comparing manual and automated segmentation: ICVautomatedICVmanual.To estimate the performance in a large number of scans, brain masks were generated from the 6 BET pipelines for 1095 longitudinal scans from 129 patients. Failure rates were estimated from visual inspection. ICV of each scan was estimated and an intraclass correlation (ICC) was estimated using a one-way ANOVA. Results: Smoothing images improves brain extraction results using BET for all measures except specificity (all p&lt;. 0.01, uncorrected), irrespective of the FI threshold. Using an FI of 0.01 or 0.1 performed better than 0.35. Thus, all reported results refer only to smoothed data using an FI of 0.01 or 0.1. Using an FI of 0.01 had a higher median sensitivity (0.9901) than an FI of 0.1 (0.9884, median difference: 0.0014, p&lt;. 0.001), accuracy (0.9971 vs. 0.9971; median difference: 0.0001, p&lt;. 0.001), and DSI (0.9895 vs. 0.9894; median difference: 0.0004, p&lt;. 0.001) and lower specificity (0.9981 vs. 0.9982; median difference: -. 0.0001, p&lt;. 0.001). These measures are all very high indicating that a range of FI values may produce visually indistinguishable brain extractions. Using smoothed data and an FI of 0.01, the mean (SD) ICV ratio was 1.002 (0.008); the mean being close to 1 indicates the ICV estimates are similar for automated and manual segmentation.In the 1095 longitudinal scans, this pipeline had a low failure rate (5.2%) and the ICC estimate was high (0.929, 95% CI: 0.91, 0.945) for successfully extracted brains. Conclusion: BET performs well at brain extraction on thresholded, 1mm3 smoothed CT images with an FI of 0.01 or 0.1. Smoothing before applying BET is an important step not previously discussed in the literature. Analysis code is provided.}}</span></span>
+<span id="cb1-38"><a href="#cb1-38" tabindex="-1"></a><span class="co">#&gt; Warning: &#39;entries_to_df&#39; is deprecated.</span></span>
+<span id="cb1-39"><a href="#cb1-39" tabindex="-1"></a><span class="co">#&gt; Use &#39;gen_entries_to_df&#39; instead.</span></span>
+<span id="cb1-40"><a href="#cb1-40" tabindex="-1"></a><span class="co">#&gt; See help(&quot;Deprecated&quot;)</span></span>
+<span id="cb1-41"><a href="#cb1-41" tabindex="-1"></a><span class="co">#&gt;                                                                                                                                                               title</span></span>
+<span id="cb1-42"><a href="#cb1-42" tabindex="-1"></a><span class="co">#&gt; 1                                                 Comparing Step-Counting Algorithms for High-Resolution Wrist Accelerometry Data in Older Adults in the ARIC Study</span></span>
+<span id="cb1-43"><a href="#cb1-43" tabindex="-1"></a><span class="co">#&gt; 2                         Fine-Mapping the Association of Acute Kidney Injury With Mean Arterial and Central Venous Pressures During Coronary Artery Bypass Surgery</span></span>
+<span id="cb1-44"><a href="#cb1-44" tabindex="-1"></a><span class="co">#&gt; 3                                                               Comparing Step Counting Algorithms for High-Resolution Wrist Accelerometry Data in NHANES 2011-2014</span></span>
+<span id="cb1-45"><a href="#cb1-45" tabindex="-1"></a><span class="co">#&gt; 4                           Objectively Measured Physical Activity Using Wrist-Worn Accelerometers as a Predictor of Incident Alzheimer’s Disease in the UK Biobank</span></span>
+<span id="cb1-46"><a href="#cb1-46" tabindex="-1"></a><span class="co">#&gt; 5                                             Assessment of Renal Vein Stasis Index by Transesophageal Echocardiography During Cardiac Surgery: A Feasibility Study</span></span>
+<span id="cb1-47"><a href="#cb1-47" tabindex="-1"></a><span class="co">#&gt; 6 Occurrence of Low Cardiac Index During Normotensive Periods in Cardiac Surgery: A Prospective Cohort Study Using Continuous Noninvasive Cardiac Output Monitoring</span></span>
+<span id="cb1-48"><a href="#cb1-48" tabindex="-1"></a><span class="co">#&gt;                                                                     journal</span></span>
+<span id="cb1-49"><a href="#cb1-49" tabindex="-1"></a><span class="co">#&gt; 1 Journals of Gerontology Series A Biological Sciences and Medical Sciences</span></span>
+<span id="cb1-50"><a href="#cb1-50" tabindex="-1"></a><span class="co">#&gt; 2                                                  Anesthesia and Analgesia</span></span>
+<span id="cb1-51"><a href="#cb1-51" tabindex="-1"></a><span class="co">#&gt; 3                               Medicine and Science in Sports and Exercise</span></span>
+<span id="cb1-52"><a href="#cb1-52" tabindex="-1"></a><span class="co">#&gt; 4 Journals of Gerontology Series A Biological Sciences and Medical Sciences</span></span>
+<span id="cb1-53"><a href="#cb1-53" tabindex="-1"></a><span class="co">#&gt; 5                                                  Anesthesia and Analgesia</span></span>
+<span id="cb1-54"><a href="#cb1-54" tabindex="-1"></a><span class="co">#&gt; 6                                                  Anesthesia and Analgesia</span></span>
+<span id="cb1-55"><a href="#cb1-55" tabindex="-1"></a><span class="co">#&gt;   description</span></span>
+<span id="cb1-56"><a href="#cb1-56" tabindex="-1"></a><span class="co">#&gt; 1     Article</span></span>
+<span id="cb1-57"><a href="#cb1-57" tabindex="-1"></a><span class="co">#&gt; 2     Article</span></span>
+<span id="cb1-58"><a href="#cb1-58" tabindex="-1"></a><span class="co">#&gt; 3     Article</span></span>
+<span id="cb1-59"><a href="#cb1-59" tabindex="-1"></a><span class="co">#&gt; 4     Article</span></span>
+<span id="cb1-60"><a href="#cb1-60" tabindex="-1"></a><span class="co">#&gt; 5      Letter</span></span>
+<span id="cb1-61"><a href="#cb1-61" tabindex="-1"></a><span class="co">#&gt; 6     Article</span></span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

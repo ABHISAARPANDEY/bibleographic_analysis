@@ -1,0 +1,10 @@
+altmetric               Gather altmetric metadata from a DOI
+dsApi2df                Convert json dimensions bibliographic data into
+                        a dataframe
+dsApiRequest            Gather bibliographic records using Digital
+                        Science Dimensions API
+dsAuth                  Obtain an API token from dimensions.ai
+dsQueryBuild            Generate a DSL query from a set of parameters
+                        It generates a valid query, written following
+                        the Dimensions Search Language (DSL), from a
+                        set of search parameters.

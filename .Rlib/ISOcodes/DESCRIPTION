@@ -1,0 +1,23 @@
+Package: ISOcodes
+Version: 2025.05.18
+Encoding: UTF-8
+Title: Selected ISO Codes
+Authors@R: c(person("Christian", "Buchta", role = "aut"),
+             person("Kurt", "Hornik", role = c("aut", "cre"),
+                    email = "Kurt.Hornik@R-project.org",
+		    comment = c(ORCID = "0000-0003-4198-9911")))
+Description: ISO language, territory, currency, script and character codes.
+  Provides ISO 639 language codes, ISO 3166 territory codes, ISO 4217
+  currency codes, ISO 15924 script codes, and the ISO 8859 character codes
+  as well as the UN M.49 area codes.
+Depends: R (>= 3.5.0)
+License: GPL-2
+LazyData: yes
+NeedsCompilation: no
+Packaged: 2025-05-18 15:54:47 UTC; hornik
+Author: Christian Buchta [aut],
+  Kurt Hornik [aut, cre] (ORCID: <https://orcid.org/0000-0003-4198-9911>)
+Maintainer: Kurt Hornik <Kurt.Hornik@R-project.org>
+Repository: CRAN
+Date/Publication: 2025-05-18 16:07:59 UTC
+Built: R 4.5.0; ; 2025-05-18 16:42:47 UTC; unix

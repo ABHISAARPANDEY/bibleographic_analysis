@@ -1,0 +1,45 @@
+analyze_scientific_content
+                        Enhanced scientific content analysis with
+                        citation extraction
+calculate_readability_indices
+                        Calculate readability indices for text
+calculate_word_distribution
+                        Calculate word distribution across text
+                        segments or sections
+create_citation_network
+                        Create Citation Co-occurrence Network
+describe_citation_clusters
+                        Describe Citation Clusters by Section Using
+                        Reference Title N-grams
+extract_doi_from_pdf    Extract DOI from PDF Metadata (Legacy Function)
+extract_pdf_metadata    Extract DOI and Metadata from PDF
+gemini_content_ai       Process Content with Google Gemini AI
+get_crossref_references
+                        Retrieve rich metadata from the CrossRef API
+                        for a given DOI
+get_example_paper       Get path to example paper
+match_citations_to_references
+                        Match citations to references
+merge_text_chunks_named
+                        Merge Text Chunks into Named Sections
+normalize_references_section
+                        Normalize references section formatting
+parse_references_section
+                        Parse references section from text
+pdf2txt_auto            Import PDF with Automatic Section Detection
+pdf2txt_multicolumn_safe
+                        Extract text from multi-column PDF with
+                        structure preservation
+plot_citation_clusters
+                        Plot Citation Cluster Descriptions
+plot_word_distribution
+                        Create interactive word distribution plot
+process_large_pdf       Process Large PDF Documents with Google Gemini
+                        AI
+readability_multiple    Calculate readability indices for multiple
+                        texts
+remove_all_tables       Remove All Types of Tables (Markdown and Plain
+                        Text)
+remove_code_blocks      Remove Markdown Code Block Markers
+remove_figure_caps      Remove Figure Captions
+split_into_sections     Split document text into sections

@@ -1,0 +1,24 @@
+dimensions v0.03
+
+Changes:
+* Minor fixes
+
+
+dimensionsR v0.0.2 
+==============
+
+New functionality:
+* Added the function 'altmetric'. It gathers altmetric metadata from a list of DOIs using 'altmetric.com' API
+
+Changes:
+* Minor fixes
+
+
+
+
+dimensionsR v0.0.1 
+==============
+
+New functionality:
+* Initial version
+

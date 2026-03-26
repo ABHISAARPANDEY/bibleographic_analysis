@@ -1,0 +1,6 @@
+pmApi2df                Convert xml PubMed bibliographic data into a
+                        dataframe
+pmApiRequest            Gather bibliographic content from PubMed
+                        database using NCBI entrez APIs
+pmQueryTotalCount       Count the number of documents returned by a
+                        query

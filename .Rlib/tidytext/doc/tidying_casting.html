@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Julia Silge and David Robinson" />
+
+<meta name="date" content="2025-07-24" />
+
+<title>Converting to and from Document-Term Matrix and Corpus objects</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Converting to and from Document-Term Matrix
+and Corpus objects</h1>
+<h4 class="author">Julia Silge and David Robinson</h4>
+<h4 class="date">2025-07-24</h4>
+
+
+
+<div id="tidying-document-term-matrices" class="section level3">
+<h3>Tidying document-term matrices</h3>
+<p>Many existing text mining datasets are in the form of a
+<code>DocumentTermMatrix</code> class (from the tm package). For
+example, consider the corpus of 2246 Associated Press articles from the
+topicmodels package:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(tm)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;AssociatedPress&quot;</span>, <span class="at">package =</span> <span class="st">&quot;topicmodels&quot;</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>AssociatedPress</span></code></pre></div>
+<pre><code>## &lt;&lt;DocumentTermMatrix (documents: 2246, terms: 10473)&gt;&gt;
+## Non-/sparse entries: 302031/23220327
+## Sparsity           : 99%
+## Maximal term length: 18
+## Weighting          : term frequency (tf)</code></pre>
+<p>If we want to analyze this with tidy tools, we need to turn it into a
+one-term-per-document-per-row data frame first. The <code>tidy</code>
+function does this. (For more on the tidy verb, <a href="https://github.com/dgrtwo/broom">see the broom package</a>).</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">library</span>(tidytext)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>ap_td <span class="ot">&lt;-</span> <span class="fu">tidy</span>(AssociatedPress)</span></code></pre></div>
+<p>Just as shown in <a href="tidytext.html">this vignette</a>, having
+the text in this format is convenient for analysis with the tidytext
+package. For example, you can perform sentiment analysis on these
+newspaper articles.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>ap_sentiments <span class="ot">&lt;-</span> ap_td <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="fu">inner_join</span>(<span class="fu">get_sentiments</span>(<span class="st">&quot;bing&quot;</span>), <span class="fu">join_by</span>(term <span class="sc">==</span> word))</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>ap_sentiments</span></code></pre></div>
+<pre><code>## # A tibble: 30,094 × 4
+##    document term    count sentiment
+##       &lt;int&gt; &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;    
+##  1        1 assault     1 negative 
+##  2        1 complex     1 negative 
+##  3        1 death       1 negative 
+##  4        1 died        1 negative 
+##  5        1 good        2 positive 
+##  6        1 illness     1 negative 
+##  7        1 killed      2 negative 
+##  8        1 like        2 positive 
+##  9        1 liked       1 positive 
+## 10        1 miracle     1 positive 
+## # ℹ 30,084 more rows</code></pre>
+<p>We can find the most negative documents:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>ap_sentiments <span class="sc">%&gt;%</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="fu">count</span>(document, sentiment, <span class="at">wt =</span> count) <span class="sc">%&gt;%</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> sentiment, <span class="at">values_from =</span> n, <span class="at">values_fill =</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sentiment =</span> positive <span class="sc">-</span> negative) <span class="sc">%&gt;%</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="fu">arrange</span>(sentiment)</span></code></pre></div>
+<pre><code>## # A tibble: 2,190 × 4
+##    document negative positive sentiment
+##       &lt;int&gt;    &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+##  1     1251       54        6       -48
+##  2     1380       53        5       -48
+##  3      531       51        9       -42
+##  4       43       45       11       -34
+##  5     1263       44       10       -34
+##  6     2178       40        6       -34
+##  7      334       45       12       -33
+##  8     1664       38        5       -33
+##  9     2147       47       14       -33
+## 10      516       38        6       -32
+## # ℹ 2,180 more rows</code></pre>
+<p>Or visualize which words contributed to positive and negative
+sentiment:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>ap_sentiments <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="fu">count</span>(sentiment, term, <span class="at">wt =</span> count) <span class="sc">%&gt;%</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="fu">group_by</span>(sentiment) <span class="sc">%&gt;%</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="fu">slice_max</span>(n, <span class="at">n =</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">term =</span> <span class="fu">reorder</span>(term, n)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(n, term, <span class="at">fill =</span> sentiment)) <span class="sc">+</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="fu">vars</span>(sentiment), <span class="at">scales =</span> <span class="st">&quot;free_y&quot;</span>) <span class="sc">+</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Contribution to sentiment&quot;</span>, <span class="at">y =</span> <span class="cn">NULL</span>)</span></code></pre></div>
+<p>&lt;img
+src=“/private/var/folders/hv/hzsmmyk9393_m7q3nscx1slc0000gn/T/RtmpOSdBEM/Rbuilded9e3973e2cd/tidytext/vignettes/tidying_casting_files/figure-html/unnamed-chunk-7-1.png”
+alt=“Bar charts for the contribution of words to sentiment scores. The
+words”like” and “work” contribute the most to positive sentiment, and
+the words “killed” and “death” contribute the most to negative
+sentiment” /&gt;</p>
+<p>Note that a tidier is also available for the <code>dfm</code> class
+from the quanteda package:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">library</span>(methods)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;data_corpus_inaugural&quot;</span>, <span class="at">package =</span> <span class="st">&quot;quanteda&quot;</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>d <span class="ot">&lt;-</span> quanteda<span class="sc">::</span><span class="fu">tokens</span>(data_corpus_inaugural) <span class="sc">%&gt;%</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  quanteda<span class="sc">::</span><span class="fu">dfm</span>()</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>d</span></code></pre></div>
+<pre><code>## Document-feature matrix of: 60 documents, 9,591 features (91.94% sparse) and 4 docvars.
+##                  features
+## docs              fellow-citizens  of the senate and house representatives :
+##   1789-Washington               1  71 116      1  48     2               2 1
+##   1793-Washington               0  11  13      0   2     0               0 1
+##   1797-Adams                    3 140 163      1 130     0               2 0
+##   1801-Jefferson                2 104 130      0  81     0               0 1
+##   1805-Jefferson                0 101 143      0  93     0               0 0
+##   1809-Madison                  1  69 104      0  43     0               0 0
+##                  features
+## docs              among vicissitudes
+##   1789-Washington     1            1
+##   1793-Washington     0            0
+##   1797-Adams          4            0
+##   1801-Jefferson      1            0
+##   1805-Jefferson      7            0
+##   1809-Madison        0            0
+## [ reached max_ndoc ... 54 more documents, reached max_nfeat ... 9,581 more features ]</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">tidy</span>(d)</span></code></pre></div>
+<pre><code>## # A tibble: 46,402 × 3
+##    document        term            count
+##    &lt;chr&gt;           &lt;chr&gt;           &lt;dbl&gt;
+##  1 1789-Washington fellow-citizens     1
+##  2 1797-Adams      fellow-citizens     3
+##  3 1801-Jefferson  fellow-citizens     2
+##  4 1809-Madison    fellow-citizens     1
+##  5 1813-Madison    fellow-citizens     1
+##  6 1817-Monroe     fellow-citizens     5
+##  7 1821-Monroe     fellow-citizens     1
+##  8 1841-Harrison   fellow-citizens    11
+##  9 1845-Polk       fellow-citizens     1
+## 10 1849-Taylor     fellow-citizens     1
+## # ℹ 46,392 more rows</code></pre>
+</div>
+<div id="casting-tidy-text-data-into-a-documenttermmatrix" class="section level3">
+<h3>Casting tidy text data into a DocumentTermMatrix</h3>
+<p>Some existing text mining tools or algorithms work only on sparse
+document-term matrices. Therefore, tidytext provides <code>cast_</code>
+verbs for converting from a tidy form to these matrices.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>ap_td</span></code></pre></div>
+<pre><code>## # A tibble: 302,031 × 3
+##    document term       count
+##       &lt;int&gt; &lt;chr&gt;      &lt;dbl&gt;
+##  1        1 adding         1
+##  2        1 adult          2
+##  3        1 ago            1
+##  4        1 alcohol        1
+##  5        1 allegedly      1
+##  6        1 allen          1
+##  7        1 apparently     2
+##  8        1 appeared       1
+##  9        1 arrested       1
+## 10        1 assault        1
+## # ℹ 302,021 more rows</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># cast into a Document-Term Matrix</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>ap_td <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="fu">cast_dtm</span>(document, term, count)</span></code></pre></div>
+<pre><code>## &lt;&lt;DocumentTermMatrix (documents: 2246, terms: 10473)&gt;&gt;
+## Non-/sparse entries: 302031/23220327
+## Sparsity           : 99%
+## Maximal term length: 18
+## Weighting          : term frequency (tf)</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># cast into a Term-Document Matrix</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>ap_td <span class="sc">%&gt;%</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>  <span class="fu">cast_tdm</span>(term, document, count)</span></code></pre></div>
+<pre><code>## &lt;&lt;TermDocumentMatrix (terms: 10473, documents: 2246)&gt;&gt;
+## Non-/sparse entries: 302031/23220327
+## Sparsity           : 99%
+## Maximal term length: 18
+## Weighting          : term frequency (tf)</code></pre>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="co"># cast into quanteda&#39;s dfm</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>ap_td <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>  <span class="fu">cast_dfm</span>(term, document, count)</span></code></pre></div>
+<pre><code>## Document-feature matrix of: 10,473 documents, 2,246 features (98.72% sparse) and 0 docvars.
+##            features
+## docs        1 2 3 4 5 6 7 8 9 10
+##   adding    1 0 0 0 0 0 0 0 0  0
+##   adult     2 0 0 0 0 0 0 0 0  0
+##   ago       1 0 1 3 0 2 0 0 0  0
+##   alcohol   1 0 0 0 0 0 0 0 0  0
+##   allegedly 1 0 0 0 0 0 0 0 0  0
+##   allen     1 0 0 0 0 0 0 0 0  0
+## [ reached max_ndoc ... 10,467 more documents, reached max_nfeat ... 2,236 more features ]</code></pre>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co"># cast into a Matrix object</span></span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>m <span class="ot">&lt;-</span> ap_td <span class="sc">%&gt;%</span></span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>  <span class="fu">cast_sparse</span>(document, term, count)</span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a><span class="fu">class</span>(m)</span></code></pre></div>
+<pre><code>## [1] &quot;dgCMatrix&quot;
+## attr(,&quot;package&quot;)
+## [1] &quot;Matrix&quot;</code></pre>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="fu">dim</span>(m)</span></code></pre></div>
+<pre><code>## [1]  2246 10473</code></pre>
+<p>This allows for easy reading, filtering, and processing to be done
+using dplyr and other tidy tools, after which the data can be converted
+into a document-term matrix for machine learning applications.</p>
+</div>
+<div id="tidying-corpus-data" class="section level3">
+<h3>Tidying corpus data</h3>
+<p>You can also tidy Corpus objects from the tm package. For example,
+consider a Corpus containing 20 documents, one for each</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>reut21578 <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;texts&quot;</span>, <span class="st">&quot;crude&quot;</span>, <span class="at">package =</span> <span class="st">&quot;tm&quot;</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a>reuters <span class="ot">&lt;-</span> <span class="fu">VCorpus</span>(<span class="fu">DirSource</span>(reut21578),</span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a>                   <span class="at">readerControl =</span> <span class="fu">list</span>(<span class="at">reader =</span> readReut21578XMLasPlain))</span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a>reuters</span></code></pre></div>
+<pre><code>## &lt;&lt;VCorpus&gt;&gt;
+## Metadata:  corpus specific: 0, document level (indexed): 0
+## Content:  documents: 20</code></pre>
+<p>The <code>tidy</code> verb creates a table with one row per
+document:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a>reuters_td <span class="ot">&lt;-</span> <span class="fu">tidy</span>(reuters)</span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a>reuters_td</span></code></pre></div>
+<pre><code>## # A tibble: 20 × 17
+##    author   datetimestamp       description heading id    language origin topics
+##    &lt;chr&gt;    &lt;dttm&gt;              &lt;chr&gt;       &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt;    &lt;chr&gt;  &lt;chr&gt; 
+##  1 &lt;NA&gt;     1987-02-26 17:00:56 &quot;&quot;          DIAMON… 127   en       Reute… YES   
+##  2 BY TED … 1987-02-26 17:34:11 &quot;&quot;          OPEC M… 144   en       Reute… YES   
+##  3 &lt;NA&gt;     1987-02-26 18:18:00 &quot;&quot;          TEXACO… 191   en       Reute… YES   
+##  4 &lt;NA&gt;     1987-02-26 18:21:01 &quot;&quot;          MARATH… 194   en       Reute… YES   
+##  5 &lt;NA&gt;     1987-02-26 19:00:57 &quot;&quot;          HOUSTO… 211   en       Reute… YES   
+##  6 &lt;NA&gt;     1987-03-01 03:25:46 &quot;&quot;          KUWAIT… 236   en       Reute… YES   
+##  7 By Jere… 1987-03-01 03:39:14 &quot;&quot;          INDONE… 237   en       Reute… YES   
+##  8 &lt;NA&gt;     1987-03-01 05:27:27 &quot;&quot;          SAUDI … 242   en       Reute… YES   
+##  9 &lt;NA&gt;     1987-03-01 08:22:30 &quot;&quot;          QATAR … 246   en       Reute… YES   
+## 10 &lt;NA&gt;     1987-03-01 18:31:44 &quot;&quot;          SAUDI … 248   en       Reute… YES   
+## 11 &lt;NA&gt;     1987-03-02 01:05:49 &quot;&quot;          SAUDI … 273   en       Reute… YES   
+## 12 &lt;NA&gt;     1987-03-02 07:39:23 &quot;&quot;          GULF A… 349   en       Reute… YES   
+## 13 &lt;NA&gt;     1987-03-02 07:43:22 &quot;&quot;          SAUDI … 352   en       Reute… YES   
+## 14 &lt;NA&gt;     1987-03-02 07:43:41 &quot;&quot;          KUWAIT… 353   en       Reute… YES   
+## 15 &lt;NA&gt;     1987-03-02 08:25:42 &quot;&quot;          PHILAD… 368   en       Reute… YES   
+## 16 &lt;NA&gt;     1987-03-02 11:20:05 &quot;&quot;          STUDY … 489   en       Reute… YES   
+## 17 &lt;NA&gt;     1987-03-02 11:28:26 &quot;&quot;          STUDY … 502   en       Reute… YES   
+## 18 &lt;NA&gt;     1987-03-02 12:13:46 &quot;&quot;          UNOCAL… 543   en       Reute… YES   
+## 19 By BERN… 1987-03-02 14:38:34 &quot;&quot;          NYMEX … 704   en       Reute… YES   
+## 20 &lt;NA&gt;     1987-03-02 14:49:06 &quot;&quot;          ARGENT… 708   en       Reute… YES   
+## # ℹ 9 more variables: lewissplit &lt;chr&gt;, cgisplit &lt;chr&gt;, oldid &lt;chr&gt;,
+## #   topics_cat &lt;named list&gt;, places &lt;named list&gt;, people &lt;chr&gt;, orgs &lt;chr&gt;,
+## #   exchanges &lt;chr&gt;, text &lt;chr&gt;</code></pre>
+<p>Similarly, you can <code>tidy</code> a <code>corpus</code> object
+from the quanteda package:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a><span class="fu">library</span>(quanteda)</span>
+<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;data_corpus_inaugural&quot;</span>)</span>
+<span id="cb29-4"><a href="#cb29-4" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" tabindex="-1"></a>data_corpus_inaugural</span></code></pre></div>
+<pre><code>## Corpus consisting of 60 documents and 4 docvars.
+## 1789-Washington :
+## &quot;Fellow-Citizens of the Senate and of the House of Representa...&quot;
+## 
+## 1793-Washington :
+## &quot;Fellow citizens, I am again called upon by the voice of my c...&quot;
+## 
+## 1797-Adams :
+## &quot;When it was first perceived, in early times, that no middle ...&quot;
+## 
+## 1801-Jefferson :
+## &quot;Friends and Fellow Citizens: Called upon to undertake the du...&quot;
+## 
+## 1805-Jefferson :
+## &quot;Proceeding, fellow citizens, to that qualification which the...&quot;
+## 
+## 1809-Madison :
+## &quot;Unwilling to depart from examples of the most revered author...&quot;
+## 
+## [ reached max_ndoc ... 54 more documents ]</code></pre>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a>inaug_td <span class="ot">&lt;-</span> <span class="fu">tidy</span>(data_corpus_inaugural)</span>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a>inaug_td</span></code></pre></div>
+<pre><code>## # A tibble: 60 × 5
+##    text                                           Year President FirstName Party
+##    &lt;chr&gt;                                         &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;     &lt;fct&gt;
+##  1 &quot;Fellow-Citizens of the Senate and of the Ho…  1789 Washingt… George    none 
+##  2 &quot;Fellow citizens, I am again called upon by …  1793 Washingt… George    none 
+##  3 &quot;When it was first perceived, in early times…  1797 Adams     John      Fede…
+##  4 &quot;Friends and Fellow Citizens:\n\nCalled upon…  1801 Jefferson Thomas    Demo…
+##  5 &quot;Proceeding, fellow citizens, to that qualif…  1805 Jefferson Thomas    Demo…
+##  6 &quot;Unwilling to depart from examples of the mo…  1809 Madison   James     Demo…
+##  7 &quot;About to add the solemnity of an oath to th…  1813 Madison   James     Demo…
+##  8 &quot;I should be destitute of feeling if I was n…  1817 Monroe    James     Demo…
+##  9 &quot;Fellow citizens, I shall not attempt to des…  1821 Monroe    James     Demo…
+## 10 &quot;In compliance with an usage coeval with the…  1825 Adams     John Qui… Demo…
+## # ℹ 50 more rows</code></pre>
+<p>This lets us work with tidy tools like <code>unnest_tokens</code> to
+analyze the text alongside the metadata.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a>inaug_words <span class="ot">&lt;-</span> inaug_td <span class="sc">%&gt;%</span></span>
+<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a>  <span class="fu">unnest_tokens</span>(word, text) <span class="sc">%&gt;%</span></span>
+<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a>  <span class="fu">anti_join</span>(stop_words)</span>
+<span id="cb33-4"><a href="#cb33-4" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" tabindex="-1"></a>inaug_words</span></code></pre></div>
+<pre><code>## # A tibble: 52,093 × 5
+##     Year President  FirstName Party word           
+##    &lt;int&gt; &lt;chr&gt;      &lt;chr&gt;     &lt;fct&gt; &lt;chr&gt;          
+##  1  1789 Washington George    none  fellow         
+##  2  1789 Washington George    none  citizens       
+##  3  1789 Washington George    none  senate         
+##  4  1789 Washington George    none  house          
+##  5  1789 Washington George    none  representatives
+##  6  1789 Washington George    none  vicissitudes   
+##  7  1789 Washington George    none  incident       
+##  8  1789 Washington George    none  life           
+##  9  1789 Washington George    none  event          
+## 10  1789 Washington George    none  filled         
+## # ℹ 52,083 more rows</code></pre>
+<p>We could then, for example, see how the appearance of a word changes
+over time:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a>inaug_freq <span class="ot">&lt;-</span> inaug_words <span class="sc">%&gt;%</span></span>
+<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a>  <span class="fu">count</span>(Year, word) <span class="sc">%&gt;%</span></span>
+<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a>  <span class="fu">complete</span>(Year, word, <span class="at">fill =</span> <span class="fu">list</span>(<span class="at">n =</span> <span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb35-4"><a href="#cb35-4" tabindex="-1"></a>  <span class="fu">group_by</span>(Year) <span class="sc">%&gt;%</span></span>
+<span id="cb35-5"><a href="#cb35-5" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year_total =</span> <span class="fu">sum</span>(n), <span class="at">percent =</span> n <span class="sc">/</span> year_total) <span class="sc">%&gt;%</span></span>
+<span id="cb35-6"><a href="#cb35-6" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb35-7"><a href="#cb35-7" tabindex="-1"></a></span>
+<span id="cb35-8"><a href="#cb35-8" tabindex="-1"></a>inaug_freq</span></code></pre></div>
+<pre><code>## # A tibble: 532,560 × 5
+##     Year word            n year_total percent
+##    &lt;int&gt; &lt;chr&gt;       &lt;int&gt;      &lt;int&gt;   &lt;dbl&gt;
+##  1  1789 1               0        529 0      
+##  2  1789 1,000           0        529 0      
+##  3  1789 100             0        529 0      
+##  4  1789 100,000,000     0        529 0      
+##  5  1789 108             0        529 0      
+##  6  1789 11              0        529 0      
+##  7  1789 120,000,000     0        529 0      
+##  8  1789 125             0        529 0      
+##  9  1789 13              0        529 0      
+## 10  1789 14th            1        529 0.00189
+## # ℹ 532,550 more rows</code></pre>
+<p>For example, we can use the broom package to perform logistic
+regression on each word.</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a><span class="fu">library</span>(broom)</span>
+<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a>models <span class="ot">&lt;-</span> inaug_freq <span class="sc">%&gt;%</span></span>
+<span id="cb37-3"><a href="#cb37-3" tabindex="-1"></a>  <span class="fu">group_by</span>(word) <span class="sc">%&gt;%</span></span>
+<span id="cb37-4"><a href="#cb37-4" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">sum</span>(n) <span class="sc">&gt;</span> <span class="dv">50</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-5"><a href="#cb37-5" tabindex="-1"></a>  <span class="fu">group_modify</span>(</span>
+<span id="cb37-6"><a href="#cb37-6" tabindex="-1"></a>    <span class="sc">~</span> <span class="fu">tidy</span>(<span class="fu">glm</span>(<span class="fu">cbind</span>(n, year_total <span class="sc">-</span> n) <span class="sc">~</span> Year, ., <span class="at">family =</span> <span class="st">&quot;binomial&quot;</span>))</span>
+<span id="cb37-7"><a href="#cb37-7" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb37-8"><a href="#cb37-8" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb37-9"><a href="#cb37-9" tabindex="-1"></a>  <span class="fu">filter</span>(term <span class="sc">==</span> <span class="st">&quot;Year&quot;</span>)</span>
+<span id="cb37-10"><a href="#cb37-10" tabindex="-1"></a></span>
+<span id="cb37-11"><a href="#cb37-11" tabindex="-1"></a>models</span></code></pre></div>
+<pre><code>## # A tibble: 121 × 6
+##    word           term   estimate std.error statistic  p.value
+##    &lt;chr&gt;          &lt;chr&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+##  1 act            Year   0.00623    0.00198     3.15  1.64e- 3
+##  2 action         Year   0.000837   0.00181     0.461 6.45e- 1
+##  3 administration Year  -0.00553    0.00169    -3.28  1.04e- 3
+##  4 america        Year   0.0195     0.00137    14.2   5.11e-46
+##  5 american       Year   0.00893    0.00116     7.73  1.05e-14
+##  6 americans      Year   0.0285     0.00287     9.93  3.13e-23
+##  7 authority      Year  -0.00654    0.00225    -2.91  3.64e- 3
+##  8 business       Year   0.00195    0.00189     1.03  3.02e- 1
+##  9 called         Year  -0.00214    0.00194    -1.10  2.70e- 1
+## 10 century        Year   0.0128     0.00218     5.87  4.36e- 9
+## # ℹ 111 more rows</code></pre>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a>models <span class="sc">%&gt;%</span></span>
+<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a>  <span class="fu">filter</span>(term <span class="sc">==</span> <span class="st">&quot;Year&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb39-3"><a href="#cb39-3" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">abs</span>(estimate)))</span></code></pre></div>
+<pre><code>## # A tibble: 121 × 6
+##    word      term  estimate std.error statistic  p.value
+##    &lt;chr&gt;     &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+##  1 americans Year    0.0285   0.00287      9.93 3.13e-23
+##  2 america   Year    0.0195   0.00137     14.2  5.11e-46
+##  3 promise   Year    0.0153   0.00252      6.08 1.19e- 9
+##  4 democracy Year    0.0141   0.00210      6.71 1.92e-11
+##  5 children  Year    0.0139   0.00232      6.00 2.03e- 9
+##  6 lives     Year    0.0138   0.00242      5.70 1.17e- 8
+##  7 century   Year    0.0128   0.00218      5.87 4.36e- 9
+##  8 god       Year    0.0128   0.00169      7.57 3.85e-14
+##  9 powers    Year   -0.0121   0.00189     -6.38 1.72e-10
+## 10 live      Year    0.0116   0.00220      5.28 1.26e- 7
+## # ℹ 111 more rows</code></pre>
+<p>You can show these models as a volcano plot, which compares the
+effect size with the significance:</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb41-2"><a href="#cb41-2" tabindex="-1"></a></span>
+<span id="cb41-3"><a href="#cb41-3" tabindex="-1"></a>models <span class="sc">%&gt;%</span></span>
+<span id="cb41-4"><a href="#cb41-4" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">adjusted.p.value =</span> <span class="fu">p.adjust</span>(p.value)) <span class="sc">%&gt;%</span></span>
+<span id="cb41-5"><a href="#cb41-5" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(estimate, adjusted.p.value)) <span class="sc">+</span></span>
+<span id="cb41-6"><a href="#cb41-6" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb41-7"><a href="#cb41-7" tabindex="-1"></a>  <span class="fu">scale_y_log10</span>() <span class="sc">+</span></span>
+<span id="cb41-8"><a href="#cb41-8" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> word), <span class="at">vjust =</span> <span class="dv">1</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">check_overlap =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb41-9"><a href="#cb41-9" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Estimated change over time&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Adjusted p-value&quot;</span>)</span></code></pre></div>
+<p>&lt;img
+src=“/private/var/folders/hv/hzsmmyk9393_m7q3nscx1slc0000gn/T/RtmpOSdBEM/Rbuilded9e3973e2cd/tidytext/vignettes/tidying_casting_files/figure-html/unnamed-chunk-16-1.png”
+alt=“Volcano plot showing that words like”america” and “world” have
+increased over time with small p-values, while words like “public” and
+“institution” have decreased” /&gt;</p>
+<p>We can also use the ggplot2 package to display the top 6 terms that
+have changed in frequency over time.</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
+<span id="cb42-2"><a href="#cb42-2" tabindex="-1"></a></span>
+<span id="cb42-3"><a href="#cb42-3" tabindex="-1"></a>models <span class="sc">%&gt;%</span></span>
+<span id="cb42-4"><a href="#cb42-4" tabindex="-1"></a>  <span class="fu">slice_max</span>(<span class="fu">abs</span>(estimate), <span class="at">n =</span> <span class="dv">6</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb42-5"><a href="#cb42-5" tabindex="-1"></a>  <span class="fu">inner_join</span>(inaug_freq) <span class="sc">%&gt;%</span></span>
+<span id="cb42-6"><a href="#cb42-6" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Year, percent)) <span class="sc">+</span></span>
+<span id="cb42-7"><a href="#cb42-7" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb42-8"><a href="#cb42-8" tabindex="-1"></a>  <span class="fu">geom_smooth</span>() <span class="sc">+</span></span>
+<span id="cb42-9"><a href="#cb42-9" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="fu">vars</span>(word)) <span class="sc">+</span></span>
+<span id="cb42-10"><a href="#cb42-10" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> <span class="fu">percent_format</span>()) <span class="sc">+</span></span>
+<span id="cb42-11"><a href="#cb42-11" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">&quot;Frequency of word in speech&quot;</span>)</span></code></pre></div>
+<p>&lt;img
+src=“/private/var/folders/hv/hzsmmyk9393_m7q3nscx1slc0000gn/T/RtmpOSdBEM/Rbuilded9e3973e2cd/tidytext/vignettes/tidying_casting_files/figure-html/unnamed-chunk-17-1.png”
+alt=“Scatterplot with LOESS smoothing lines showing that the
+words”america”, “americans”, “century”, “children”, “democracy”, and
+“god” have increased over time” /&gt;</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
