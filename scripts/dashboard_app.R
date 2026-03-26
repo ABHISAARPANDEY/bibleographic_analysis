@@ -4,6 +4,7 @@ suppressPackageStartupMessages({
   library(shiny)
   library(plotly)
   library(DT)
+  library(visNetwork)
   library(dplyr)
   library(tidyr)
   library(stringr)
@@ -46,10 +47,18 @@ ui <- fluidPage(
         tabPanel("Keywords", plotlyOutput("keywords_plot"), DTOutput("keywords_table")),
         tabPanel("Documents", DTOutput("docs_table")),
         tabPanel(
+          "Dynamic Networks",
+          selectInput("network_type", "Network type", choices = c("Authors", "Keywords", "Countries"), selected = "Authors"),
+          visNetworkOutput("dynamic_network", height = "760px")
+        ),
+        tabPanel(
           "Generated Outputs",
           h4("Generated Plot Preview"),
           selectInput("plot_file", "Choose plot", choices = c()),
           imageOutput("selected_plot", height = "700px"),
+          br(),
+          h4("Plot Gallery"),
+          uiOutput("plot_gallery"),
           br(),
           h4("Exported Tables"),
           DTOutput("generated_tables")
@@ -183,6 +192,56 @@ server <- function(input, output, session) {
     datatable(docs, options = list(pageLength = 10, scrollX = TRUE))
   })
 
+  build_pair_network <- function(x, field, sep = ";", top_n = 80) {
+    vals <- x[[field]]
+    vals <- ifelse(is.na(vals), "", vals)
+    edge_acc <- list()
+    idx <- 1
+    for (v in vals) {
+      parts <- unique(str_trim(unlist(str_split(v, sep))))
+      parts <- parts[parts != "" & parts != "unknown" & parts != "Unknown"]
+      if (length(parts) < 2) next
+      cmb <- t(combn(parts, 2))
+      edge_acc[[idx]] <- data.frame(from = cmb[, 1], to = cmb[, 2], stringsAsFactors = FALSE)
+      idx <- idx + 1
+    }
+    if (length(edge_acc) == 0) return(NULL)
+    edges <- bind_rows(edge_acc) %>%
+      count(from, to, sort = TRUE, name = "weight") %>%
+      slice_head(n = top_n)
+    nodes <- data.frame(id = unique(c(edges$from, edges$to)), stringsAsFactors = FALSE)
+    nodes$label <- nodes$id
+    node_w <- bind_rows(
+      edges %>% transmute(id = from, w = weight),
+      edges %>% transmute(id = to, w = weight)
+    ) %>% group_by(id) %>% summarise(w = sum(w), .groups = "drop")
+    nodes <- nodes %>% left_join(node_w, by = "id")
+    nodes$value <- ifelse(is.na(nodes$w), 1, nodes$w)
+    list(nodes = nodes, edges = edges)
+  }
+
+  output$dynamic_network <- renderVisNetwork({
+    x <- filtered()
+    nt <- input$network_type
+    net <- NULL
+    if (nt == "Authors") {
+      net <- build_pair_network(x, "authors", sep = ";", top_n = 120)
+    } else if (nt == "Keywords") {
+      net <- build_pair_network(x, "keywords", sep = ";", top_n = 140)
+    } else if (nt == "Countries") {
+      x2 <- x %>% mutate(country = ifelse(is.na(affiliation), "", gsub("^.*?,\\s*", "", affiliation)))
+      net <- build_pair_network(x2, "country", sep = ";", top_n = 100)
+    }
+    validate(need(!is.null(net), "Not enough connections to build this network with current filters."))
+
+    visNetwork(net$nodes, net$edges) %>%
+      visEdges(smooth = FALSE, color = list(color = "#9CA3AF", highlight = "#2563EB")) %>%
+      visNodes(color = list(background = "#2C7FB8", border = "#1D4E89"), font = list(size = 18)) %>%
+      visPhysics(stabilization = TRUE, barnesHut = list(gravitationalConstant = -4000, springLength = 120)) %>%
+      visInteraction(navigationButtons = TRUE, hover = TRUE) %>%
+      visOptions(highlightNearest = list(enabled = TRUE, degree = 1), selectedBy = "id")
+  })
+
   output$download_filtered <- downloadHandler(
     filename = function() {
       paste0("filtered_bibliometric_data_", Sys.Date(), ".csv")
@@ -214,6 +273,21 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
     datatable(info, options = list(pageLength = 10))
+  })
+
+  output$plot_gallery <- renderUI({
+    if (!dir.exists(plot_dir)) return(tags$p("No plot directory found."))
+    plot_files <- sort(list.files(plot_dir, pattern = "\\.png$", full.names = FALSE))
+    if (length(plot_files) == 0) return(tags$p("No plot images generated yet."))
+
+    blocks <- lapply(plot_files, function(f) {
+      tags$div(
+        style = "width: 32%; display: inline-block; vertical-align: top; margin: 0.5%; border: 1px solid #e5e7eb; padding: 8px; border-radius: 8px;",
+        tags$div(style = "font-size: 12px; font-weight: 600; margin-bottom: 6px; word-break: break-word;", f),
+        tags$img(src = file.path(plot_dir, f), style = "width: 100%; height: 180px; object-fit: contain; background: #fafafa;")
+      )
+    })
+    do.call(tagList, blocks)
   })
 }
 

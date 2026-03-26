@@ -24,7 +24,7 @@
 required_packages <- c(
   "httr2", "jsonlite", "dplyr", "stringr", "tidyr", "purrr",
   "readr", "janitor", "lubridate", "stopwords", "bibliometrix", "ggplot2",
-  "shiny", "plotly", "DT"
+  "shiny", "plotly", "DT", "igraph"
 )
 
 install_and_load_packages <- function(pkgs) {
@@ -99,6 +99,163 @@ publication_theme <- function() {
       panel.grid.minor = element_blank(),
       legend.position = "bottom"
     )
+}
+
+save_tree_network_png <- function(net_matrix, output_path, plot_title) {
+  if (is.null(net_matrix)) return(invisible(NULL))
+  mat <- as.matrix(net_matrix)
+  if (nrow(mat) < 3 || ncol(mat) < 3) return(invisible(NULL))
+  mat[is.na(mat)] <- 0
+  diag(mat) <- 0
+  if (sum(mat) <= 0) return(invisible(NULL))
+
+  g <- igraph::graph_from_adjacency_matrix(mat, mode = "undirected", weighted = TRUE, diag = FALSE)
+  if (igraph::ecount(g) == 0) return(invisible(NULL))
+
+  comp <- igraph::components(g)
+  g <- igraph::induced_subgraph(g, which(comp$membership == which.max(comp$csize)))
+  if (igraph::ecount(g) == 0 || igraph::vcount(g) < 3) return(invisible(NULL))
+
+  # Use maximum spanning tree to create clear tree-like high-quality static output.
+  w <- igraph::E(g)$weight
+  w[is.na(w)] <- 1
+  tree <- igraph::mst(g, weights = -w)
+
+  deg <- igraph::degree(tree)
+  vsize <- pmax(6, pmin(22, 6 + deg * 1.8))
+  ewidth <- igraph::E(tree)$weight
+  ewidth[is.na(ewidth)] <- 1
+  ewidth <- pmax(0.8, pmin(4.5, scales::rescale(ewidth, to = c(0.8, 4.5))))
+
+  png(output_path, width = 2400, height = 1700, res = 260)
+  par(mar = c(1, 1, 4, 1))
+  plot(
+    tree,
+    layout = igraph::layout_as_tree(tree, circular = FALSE),
+    vertex.size = vsize,
+    vertex.color = "#2C7FB8",
+    vertex.frame.color = "#1C4E80",
+    vertex.label.color = "#111111",
+    vertex.label.cex = 0.65,
+    vertex.label.family = "sans",
+    edge.color = "#6B7280",
+    edge.width = ewidth,
+    edge.curved = 0.05
+  )
+  title(main = plot_title, cex.main = 1.3, font.main = 2)
+  dev.off()
+}
+
+build_edge_list_from_field <- function(df, field, sep = ";", top_n_edges = 300) {
+  vals <- df[[field]]
+  vals <- ifelse(is.na(vals), "", vals)
+  edges <- list()
+  idx <- 1
+  for (v in vals) {
+    parts <- unique(str_trim(unlist(str_split(v, sep))))
+    parts <- parts[parts != "" & parts != "unknown" & parts != "Unknown"]
+    if (length(parts) < 2) next
+    cmb <- t(combn(parts, 2))
+    edges[[idx]] <- data.frame(from = cmb[, 1], to = cmb[, 2], stringsAsFactors = FALSE)
+    idx <- idx + 1
+  }
+  if (length(edges) == 0) return(NULL)
+  bind_rows(edges) %>%
+    count(from, to, sort = TRUE, name = "weight") %>%
+    slice_head(n = top_n_edges)
+}
+
+save_network_png_from_edges <- function(edges_df, output_path, plot_title, max_nodes = 60, label_top_n = 25) {
+  if (is.null(edges_df) || nrow(edges_df) == 0) return(invisible(NULL))
+  g <- igraph::graph_from_data_frame(edges_df, directed = FALSE)
+  if (igraph::vcount(g) < 3 || igraph::ecount(g) < 1) return(invisible(NULL))
+  comp <- igraph::components(g)
+  g <- igraph::induced_subgraph(g, which(comp$membership == which.max(comp$csize)))
+  if (igraph::vcount(g) < 3 || igraph::ecount(g) < 1) return(invisible(NULL))
+
+  # Keep only most connected nodes to avoid clutter.
+  deg0 <- igraph::degree(g)
+  keep <- names(sort(deg0, decreasing = TRUE))[seq_len(min(max_nodes, length(deg0)))]
+  g <- igraph::induced_subgraph(g, vids = keep)
+  if (igraph::vcount(g) < 3 || igraph::ecount(g) < 1) return(invisible(NULL))
+
+  deg <- igraph::degree(g)
+  vsize <- pmax(5, pmin(20, 5 + deg * 1.2))
+  ewidth <- igraph::E(g)$weight
+  ewidth[is.na(ewidth)] <- 1
+  ewidth <- pmax(0.6, pmin(3.5, scales::rescale(ewidth, to = c(0.6, 3.5))))
+
+  png(output_path, width = 2400, height = 1700, res = 260)
+  par(mar = c(1, 1, 4, 1))
+  labels <- igraph::V(g)$name
+  ord <- order(deg, decreasing = TRUE)
+  if (length(labels) > label_top_n) {
+    labels[-ord[seq_len(label_top_n)]] <- ""
+  }
+
+  plot(
+    g,
+    layout = igraph::layout_with_fr(g),
+    vertex.size = vsize,
+    vertex.color = "#1F77B4",
+    vertex.frame.color = "#0E3A5D",
+    vertex.label = labels,
+    vertex.label.cex = 0.7,
+    vertex.label.color = "#111111",
+    edge.width = ewidth,
+    edge.color = "#9CA3AF"
+  )
+  title(main = plot_title, cex.main = 1.3, font.main = 2)
+  dev.off()
+}
+
+save_tree_network_from_edges <- function(edges_df, output_path, plot_title, max_nodes = 70, label_top_n = 30) {
+  if (is.null(edges_df) || nrow(edges_df) == 0) return(invisible(NULL))
+  g <- igraph::graph_from_data_frame(edges_df, directed = FALSE)
+  if (igraph::vcount(g) < 3 || igraph::ecount(g) < 1) return(invisible(NULL))
+  comp <- igraph::components(g)
+  g <- igraph::induced_subgraph(g, which(comp$membership == which.max(comp$csize)))
+  if (igraph::vcount(g) < 3 || igraph::ecount(g) < 1) return(invisible(NULL))
+
+  deg0 <- igraph::degree(g)
+  keep <- names(sort(deg0, decreasing = TRUE))[seq_len(min(max_nodes, length(deg0)))]
+  g <- igraph::induced_subgraph(g, vids = keep)
+  if (igraph::vcount(g) < 3 || igraph::ecount(g) < 1) return(invisible(NULL))
+
+  w <- igraph::E(g)$weight
+  w[is.na(w)] <- 1
+  tree <- igraph::mst(g, weights = -w)
+
+  deg <- igraph::degree(tree)
+  vsize <- pmax(6, pmin(22, 6 + deg * 1.8))
+  ewidth <- igraph::E(tree)$weight
+  ewidth[is.na(ewidth)] <- 1
+  ewidth <- pmax(0.8, pmin(4.5, scales::rescale(ewidth, to = c(0.8, 4.5))))
+
+  png(output_path, width = 2400, height = 1700, res = 260)
+  par(mar = c(1, 1, 4, 1))
+  labels <- igraph::V(tree)$name
+  ord <- order(deg, decreasing = TRUE)
+  if (length(labels) > label_top_n) {
+    labels[-ord[seq_len(label_top_n)]] <- ""
+  }
+
+  plot(
+    tree,
+    layout = igraph::layout_as_tree(tree, circular = FALSE),
+    vertex.size = vsize,
+    vertex.color = "#2C7FB8",
+    vertex.frame.color = "#1C4E80",
+    vertex.label = labels,
+    vertex.label.color = "#111111",
+    vertex.label.cex = 0.72,
+    vertex.label.family = "sans",
+    edge.color = "#6B7280",
+    edge.width = ewidth,
+    edge.curved = 0.05
+  )
+  title(main = plot_title, cex.main = 1.3, font.main = 2)
+  dev.off()
 }
 
 decode_openalex_abstract <- function(inverted_index) {
@@ -686,6 +843,25 @@ run_bibliometric_outputs <- function(M, plots_dir = "results/plots", tables_dir 
     tryCatch(expr, error = function(e) message(step_name, " skipped: ", conditionMessage(e)))
   }
 
+  # Robust custom network outputs (always generated when enough links exist).
+  safe_plot_step({
+    edges_auth <- build_edge_list_from_field(M, "AU", sep = ";", top_n_edges = 220)
+    save_network_png_from_edges(edges_auth, file.path(plots_dir, "network_coauthorship.png"), "Co-authorship Network", max_nodes = 55, label_top_n = 22)
+    save_tree_network_from_edges(edges_auth, file.path(plots_dir, "network_coauthorship_tree_static.png"), "Co-authorship Tree (Static)", max_nodes = 65, label_top_n = 26)
+  }, "Custom author network")
+
+  safe_plot_step({
+    edges_kw <- build_edge_list_from_field(M, "ID", sep = ";", top_n_edges = 240)
+    save_network_png_from_edges(edges_kw, file.path(plots_dir, "network_keyword_cooccurrence.png"), "Keyword Co-occurrence Network", max_nodes = 60, label_top_n = 24)
+    save_tree_network_from_edges(edges_kw, file.path(plots_dir, "network_keywords_tree_static.png"), "Keyword Co-occurrence Tree (Static)", max_nodes = 70, label_top_n = 28)
+  }, "Custom keyword network")
+
+  safe_plot_step({
+    edges_cty <- build_edge_list_from_field(M, "CU", sep = ";", top_n_edges = 120)
+    save_network_png_from_edges(edges_cty, file.path(plots_dir, "network_country_collaboration.png"), "Country Collaboration Network", max_nodes = 45, label_top_n = 20)
+    save_tree_network_from_edges(edges_cty, file.path(plots_dir, "network_countries_tree_static.png"), "Country Collaboration Tree (Static)", max_nodes = 50, label_top_n = 22)
+  }, "Custom country network")
+
   message("Building co-authorship network...")
   safe_plot_step({
     M_auth <- M %>% mutate(AU = ifelse(is.na(AU) | AU %in% c("", "unknown"), "", AU)) %>% filter(AU != "")
@@ -694,6 +870,11 @@ run_bibliometric_outputs <- function(M, plots_dir = "results/plots", tables_dir 
       png(file.path(plots_dir, "network_coauthorship.png"), width = 1400, height = 1000, res = 130)
       networkPlot(net_auth, n = min(50, nrow(M_auth)), type = "fruchterman", size = TRUE, remove.isolates = TRUE, labelsize = 0.8, title = "Co-authorship network")
       dev.off()
+      save_tree_network_png(
+        net_auth,
+        file.path(plots_dir, "network_coauthorship_tree_static.png"),
+        "Co-authorship Tree (Static)"
+      )
     } else {
       message("Co-authorship network skipped: insufficient author data.")
     }
@@ -707,6 +888,11 @@ run_bibliometric_outputs <- function(M, plots_dir = "results/plots", tables_dir 
       png(file.path(plots_dir, "network_keyword_cooccurrence.png"), width = 1400, height = 1000, res = 130)
       networkPlot(net_kw, n = min(60, nrow(M_kw)), type = "fruchterman", size = TRUE, remove.isolates = TRUE, labelsize = 0.8, title = "Keyword co-occurrence")
       dev.off()
+      save_tree_network_png(
+        net_kw,
+        file.path(plots_dir, "network_keywords_tree_static.png"),
+        "Keyword Co-occurrence Tree (Static)"
+      )
     } else {
       message("Keyword network skipped: insufficient keyword data.")
     }
@@ -720,6 +906,11 @@ run_bibliometric_outputs <- function(M, plots_dir = "results/plots", tables_dir 
       png(file.path(plots_dir, "network_country_collaboration.png"), width = 1400, height = 1000, res = 130)
       networkPlot(net_country, n = min(40, nrow(M_country)), type = "fruchterman", size = TRUE, remove.isolates = TRUE, labelsize = 0.9, title = "Country collaboration")
       dev.off()
+      save_tree_network_png(
+        net_country,
+        file.path(plots_dir, "network_countries_tree_static.png"),
+        "Country Collaboration Tree (Static)"
+      )
     } else {
       message("Country network skipped: insufficient country data.")
     }
