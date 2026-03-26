@@ -1,61 +1,61 @@
 period,ID,frequency
-2000-2010,agriculture,5
-2000-2010,business,4
-2000-2010,economics,4
-2000-2010,geography,4
-2000-2010,agricultural economics,3
-2000-2010,economic growth,3
-2000-2010,access to finance,2
-2000-2010,agricultural productivity,2
-2000-2010,cash,2
-2000-2010,collateral,2
-2000-2010,payment,2
-2000-2010,price premium,2
-2000-2010,price support,2
-2000-2010,receipt,2
-2000-2010,revenue,2
-2000-2010,trade finance,2
-2000-2010,transaction cost,2
-2000-2010,agribusiness,1
-2000-2010,archaeology,1
-2000-2010,credit rationing,1
-2011-2017,business,21
-2011-2017,economics,20
-2011-2017,agriculture,19
-2011-2017,geography,18
-2011-2017,economic growth,14
-2011-2017,agricultural economics,13
-2011-2017,agricultural productivity,10
-2011-2017,productivity,9
-2011-2017,government linguistics,6
-2011-2017,agricultural science,5
-2011-2017,loan,5
-2011-2017,poverty,5
-2011-2017,production economics,5
-2011-2017,collateral,4
-2011-2017,population,4
-2011-2017,scale ratio,4
-2011-2017,descriptive statistics,3
-2011-2017,financial inclusion,3
-2011-2017,financial services,3
-2011-2017,political science,3
-2018-2025,agriculture,101
-2018-2025,business,88
-2018-2025,economics,87
-2018-2025,geography,78
-2018-2025,agricultural economics,72
-2018-2025,economic growth,51
-2018-2025,productivity,42
-2018-2025,agricultural productivity,39
-2018-2025,agricultural science,25
-2018-2025,production economics,23
-2018-2025,loan,19
-2018-2025,financial system,18
-2018-2025,financial services,17
-2018-2025,environmental science,16
-2018-2025,government linguistics,14
-2018-2025,financial inclusion,12
-2018-2025,econometrics,10
-2018-2025,food security,10
-2018-2025,macroeconomics,10
-2018-2025,poverty,10
+2000-2010,political science,88
+2000-2010,sustainable development,88
+2000-2010,business,79
+2000-2010,economics,59
+2000-2010,sustainability,48
+2000-2010,ecology,44
+2000-2010,engineering,44
+2000-2010,computer science,43
+2000-2010,sociology,37
+2000-2010,geography,33
+2000-2010,public relations,26
+2000-2010,environmental resource management,25
+2000-2010,environmental planning,23
+2000-2010,law,22
+2000-2010,corporate social responsibility,21
+2000-2010,environmental economics,21
+2000-2010,environmental science,21
+2000-2010,corporate governance,18
+2000-2010,process management,16
+2000-2010,environmental ethics,15
+2011-2017,business,154
+2011-2017,economics,146
+2011-2017,political science,119
+2011-2017,sustainable development,114
+2011-2017,circular economy,103
+2011-2017,computer science,90
+2011-2017,engineering,85
+2011-2017,sustainability,84
+2011-2017,ecology,78
+2011-2017,marketing,46
+2011-2017,geography,43
+2011-2017,environmental economics,42
+2011-2017,industrial organization,35
+2011-2017,sociology,35
+2011-2017,environmental resource management,33
+2011-2017,process management,31
+2011-2017,economic system,30
+2011-2017,natural resource economics,30
+2011-2017,management science,28
+2011-2017,economic growth,27
+2018-2025,business,523
+2018-2025,economics,442
+2018-2025,circular economy,318
+2018-2025,sustainable development,282
+2018-2025,political science,241
+2018-2025,engineering,240
+2018-2025,computer science,234
+2018-2025,sustainability,223
+2018-2025,ecology,179
+2018-2025,industrial organization,154
+2018-2025,environmental economics,143
+2018-2025,marketing,137
+2018-2025,corporate governance,110
+2018-2025,natural resource economics,101
+2018-2025,geography,84
+2018-2025,context archaeology,81
+2018-2025,waste management,81
+2018-2025,economic growth,79
+2018-2025,process management,74
+2018-2025,accounting,72

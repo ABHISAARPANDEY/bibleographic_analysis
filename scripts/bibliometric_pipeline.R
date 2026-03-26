@@ -73,7 +73,20 @@ config <- list(
   apply_strict_relevance_filter = TRUE,
   use_existing_raw_if_available = TRUE,
   target_primary_sources = c("scopus", "wos", "dimensions"),
-  use_openalex_crossref_fallback = FALSE
+  use_openalex_crossref_fallback = FALSE,
+  focus_keywords = c(
+    "sustainable finance",
+    "green finance",
+    "esg",
+    "corporate responsibility",
+    "sustainable investment",
+    "net zero",
+    "circular economy",
+    "sustainable mining",
+    "policy framework",
+    "sustainable development",
+    "global collaboration"
+  )
 )
 
 # ---------------------------
@@ -89,6 +102,15 @@ coalesce_chr <- function(...) {
   out <- vals[[1]]
   for (i in 2:length(vals)) out <- dplyr::coalesce(out, vals[[i]])
   out
+}
+
+build_query_with_focus <- function(base_query, focus_keywords = NULL) {
+  if (is.null(focus_keywords) || length(focus_keywords) == 0) return(base_query)
+  fk <- unique(str_trim(tolower(focus_keywords)))
+  fk <- fk[fk != ""]
+  if (length(fk) == 0) return(base_query)
+  focus_clause <- paste0('"', fk, '"', collapse = " OR ")
+  paste0("(", base_query, ") OR (", focus_clause, ")")
 }
 
 publication_theme <- function() {
@@ -604,8 +626,13 @@ apply_strict_relevance_filter <- function(df) {
 
   # Strict logic:
   # (financial inclusion AND agricultural finance) OR (farm/agri credit AND agricultural productivity)
-  pass_logic <- (has_fin_inclusion & has_agri_finance) | (has_agri_finance & has_productivity)
-  pass_logic <- pass_logic & has_agri_context
+  pass_logic_core <- (has_fin_inclusion & has_agri_finance) | (has_agri_finance & has_productivity)
+  pass_logic_core <- pass_logic_core & has_agri_context
+
+  # Expanded sustainability logic for user focus terms.
+  focus_regex <- "sustainable finance|green finance|\\besg\\b|corporate responsibility|sustainable investment|net zero|circular economy|sustainable mining|policy framework|sustainable development|global collaboration"
+  has_focus_theme <- str_detect(text_blob, focus_regex)
+  pass_logic <- pass_logic_core | has_focus_theme
 
   # Remove noisy non-research records commonly seen in API harvests.
   noisy_title <- str_detect(
@@ -678,7 +705,7 @@ to_bibliometrix_df <- function(clean_df, optional_biblio = list(scopus = NULL, w
 # ---------------------------
 # 4-7) Bibliometric + network + thematic + export
 # ---------------------------
-run_bibliometric_outputs <- function(M, plots_dir = "results/plots", tables_dir = "results/tables") {
+run_bibliometric_outputs <- function(M, plots_dir = "results/plots", tables_dir = "results/tables", focus_keywords = NULL) {
   if (nrow(M) == 0) stop("No records available for bibliometric analysis.")
 
   # Clean potentially malformed affiliation/country fields before bibliometrix internals.
@@ -819,6 +846,40 @@ run_bibliometric_outputs <- function(M, plots_dir = "results/plots", tables_dir 
       labs(title = "Top 20 Keywords", x = "Keyword", y = "Frequency") +
       publication_theme()
     ggsave(file.path(plots_dir, "top20_keywords_bar.png"), p_kw, width = 10, height = 7, dpi = 300)
+  }
+
+  # User-provided focus keywords: frequency + trend + dedicated figure.
+  if (!is.null(focus_keywords) && length(focus_keywords) > 0) {
+    fk <- unique(str_trim(tolower(focus_keywords)))
+    fk <- fk[fk != ""]
+    if (length(fk) > 0) {
+      focus_tbl_raw <- M %>%
+        mutate(DE = coalesce(DE, "")) %>%
+        separate_rows(DE, sep = ";") %>%
+        mutate(DE = str_trim(tolower(DE))) %>%
+        filter(DE %in% fk) %>%
+        count(DE, sort = TRUE, name = "frequency")
+      focus_tbl <- tibble(DE = fk) %>%
+        left_join(focus_tbl_raw, by = "DE") %>%
+        mutate(frequency = coalesce(frequency, 0L)) %>%
+        arrange(desc(frequency), DE)
+      write_csv(focus_tbl, file.path(tables_dir, "focus_keywords_frequency.csv"))
+
+      focus_year_tbl <- M %>%
+        mutate(PY = as.integer(PY), DE = coalesce(DE, "")) %>%
+        separate_rows(DE, sep = ";") %>%
+        mutate(DE = str_trim(tolower(DE))) %>%
+        filter(DE %in% fk, !is.na(PY)) %>%
+        count(PY, DE, name = "frequency", sort = FALSE)
+      write_csv(focus_year_tbl, file.path(tables_dir, "focus_keywords_yearly_trend.csv"))
+
+      p_fk <- ggplot(focus_tbl, aes(x = reorder(DE, frequency), y = frequency)) +
+        geom_col(fill = "#6A3D9A") +
+        coord_flip() +
+        labs(title = "User Focus Keywords Frequency", x = "Keyword", y = "Frequency") +
+        publication_theme()
+      ggsave(file.path(plots_dir, "focus_keywords_bar.png"), p_fk, width = 10, height = 7, dpi = 300)
+    }
   }
 
   if (nrow(country_tbl) > 0) {
@@ -1002,8 +1063,11 @@ run_pipeline <- function(config) {
 
     # Optional fallback to OpenAlex/CrossRef only when requested.
     if (isTRUE(config$use_openalex_crossref_fallback)) {
+      query_openalex <- build_query_with_focus(config$query_openalex, config$focus_keywords)
+      query_crossref <- build_query_with_focus(config$query_crossref, config$focus_keywords)
+
       openalex_raw <- fetch_openalex(
-        query = config$query_openalex,
+        query = query_openalex,
         min_year = config$min_year,
         max_year = config$max_year,
         target_n = config$target_n_records,
@@ -1014,7 +1078,7 @@ run_pipeline <- function(config) {
       )
 
       crossref_raw <- fetch_crossref(
-        query = config$query_crossref,
+        query = query_crossref,
         min_year = config$min_year,
         max_year = config$max_year,
         target_n = config$target_n_records,
@@ -1072,7 +1136,12 @@ run_pipeline <- function(config) {
   write_csv(M, "data/clean/bibliometrix_ready.csv")
 
   # Steps 4-7: Analysis + export
-  out <- run_bibliometric_outputs(M, plots_dir = "results/plots", tables_dir = "results/tables")
+  out <- run_bibliometric_outputs(
+    M,
+    plots_dir = "results/plots",
+    tables_dir = "results/tables",
+    focus_keywords = config$focus_keywords
+  )
 
   # Step 8: Biblioshiny
   if (isTRUE(config$launch_biblioshiny)) {
